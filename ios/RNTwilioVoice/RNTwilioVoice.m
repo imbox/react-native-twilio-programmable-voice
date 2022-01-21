@@ -74,7 +74,7 @@ RCT_EXPORT_METHOD(configureCallKit: (NSDictionary *)params) {
        * In this case we've already initialized our own `TVODefaultAudioDevice` instance which we will now set.
        */
       self.audioDevice = [TVODefaultAudioDevice audioDevice];
-      TwilioVoice.audioDevice = self.audioDevice;
+      TwilioVoiceSDK.audioDevice = self.audioDevice;
 
       self.activeCallInvites = [NSMutableDictionary dictionary];
       self.activeCalls = [NSMutableDictionary dictionary];
@@ -147,7 +147,7 @@ RCT_EXPORT_METHOD(unregister) {
   NSString *accessToken = [self fetchAccessToken];
   NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
   if ([cachedDeviceToken length] > 0) {
-      [TwilioVoice unregisterWithAccessToken:accessToken
+      [TwilioVoiceSDK unregisterWithAccessToken:accessToken
                                  deviceToken:cachedDeviceToken
                                   completion:^(NSError * _Nullable error) {
                                     if (error) {
@@ -240,7 +240,7 @@ RCT_REMAP_METHOD(getCallInvite,
         /*
          * Perform registration if a new device token is detected.
          */
-        [TwilioVoice registerWithAccessToken:accessToken
+        [TwilioVoiceSDK registerWithAccessToken:accessToken
                                  deviceToken:cachedDeviceToken
                                   completion:^(NSError *error) {
              if (error) {
@@ -272,7 +272,7 @@ RCT_REMAP_METHOD(getCallInvite,
 
     NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
     if ([cachedDeviceToken length] > 0) {
-        [TwilioVoice unregisterWithAccessToken:accessToken
+        [TwilioVoiceSDK unregisterWithAccessToken:accessToken
                                                 deviceToken:cachedDeviceToken
                                                  completion:^(NSError * _Nullable error) {
                                                    if (error) {
@@ -294,7 +294,7 @@ RCT_REMAP_METHOD(getCallInvite,
   NSLog(@"pushRegistry:didReceiveIncomingPushWithPayload:forType");
   if ([type isEqualToString:PKPushTypeVoIP]) {
       // The Voice SDK will use main queue to invoke `cancelledCallInviteReceived:error` when delegate queue is not passed
-      if (![TwilioVoice handleNotification:payload.dictionaryPayload delegate:self delegateQueue: nil]) {
+      if (![TwilioVoiceSDK handleNotification:payload.dictionaryPayload delegate:self delegateQueue: nil]) {
           NSLog(@"This is not a valid Twilio Voice notification.");
       }
   }
@@ -316,7 +316,7 @@ withCompletionHandler:(void (^)(void))completion {
 
     if ([type isEqualToString:PKPushTypeVoIP]) {
         // The Voice SDK will use main queue to invoke `cancelledCallInviteReceived:error` when delegate queue is not passed
-        if (![TwilioVoice handleNotification:payload.dictionaryPayload delegate:self delegateQueue: nil]) {
+        if (![TwilioVoiceSDK handleNotification:payload.dictionaryPayload delegate:self delegateQueue: nil]) {
             NSLog(@"This is not a valid Twilio Voice notification.");
         }
     }
@@ -773,7 +773,7 @@ withCompletionHandler:(void (^)(void))completion {
       builder.params = strongSelf->_callParams;
       builder.uuid = uuid;
     }];
-    TVOCall *call = [TwilioVoice connectWithOptions:connectOptions delegate:self];
+    TVOCall *call = [TwilioVoiceSDK connectWithOptions:connectOptions delegate:self];
     if (call) {
       self.activeCall = call;
       self.activeCalls[call.uuid.UUIDString] = call;
