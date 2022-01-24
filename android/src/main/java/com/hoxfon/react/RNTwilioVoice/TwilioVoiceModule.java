@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -19,6 +21,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import kotlin.Unit;
 
 import android.os.Bundle;
+import android.telecom.Connection;
+import android.telecom.PhoneAccount;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -114,6 +121,10 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
     private int savedVolumeControlStream;
     AudioDevice selectedAudioDevice;
     Map<String, AudioDevice> availableAudioDevices;
+
+    private TelephonyManager telephonyManager;
+    private PhoneAccountHandle handle;
+    private TelecomManager telecomManager;
 
     public TwilioVoiceModule(ReactApplicationContext reactContext,
                              boolean shouldAskForMicPermission) {
@@ -489,6 +500,22 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                     handleCancelCall(intent);
                     break;
 
+                case Constants.ACTION_DISCONNECT_CALL:
+                    activeCall.disconnect();
+                    break;
+
+                case Constants.ACTION_DTMF_SEND:
+                    String digits = intent.getStringExtra(Constants.DTMF);
+                    activeCall.sendDigits(digits);
+                    break;
+
+                case Constants.ACTION_HOLD_CALL:
+                    activeCall.hold(true);
+                    break;
+
+                case Constants.ACTION_UNHOLD_CALL:
+                    activeCall.hold(false);
+                    break;
             }
         }
     }
@@ -593,12 +620,28 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             Log.e(TAG, "NO active call invite");
             return;
         }
-        SoundPoolManager.getInstance(getReactApplicationContext()).playRinging();
+
+        Bundle extras = new Bundle();
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, activeCallInvite.getFrom(), null);
+        String uuid = "abc123";
+        extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
+        extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
+        // extras.putString(EXTRA_CALLER_NAME, activeCallInvite.getFrom());
+        extras.putString(Constants.EXTRA_CALL_UUID, uuid);
+
+        telecomManager.addNewIncomingCall(handle, extras);
+
+        // SoundPoolManager.getInstance(getReactApplicationContext()).playRinging();
 
         WritableMap params = Arguments.createMap();
         params.putString(Constants.CALL_SID, activeCallInvite.getCallSid());
         params.putString(Constants.CALL_FROM, activeCallInvite.getFrom());
         params.putString(Constants.CALL_TO, activeCallInvite.getTo());
+        WritableMap customParametersMap = Arguments.createMap();
+        for (Map.Entry<String, String> entry: activeCallInvite.getCustomParameters().entrySet()) {
+            customParametersMap.putString(entry.getKey(), entry.getValue());
+        }
+        params.putMap(Constants.CALL_CUSTOM_PARAMETERS, customParametersMap);
         String verificationStatus = Constants.CALLER_VERIFICATION_UNKNOWN;
         if (activeCallInvite.getCallerInfo().isVerified() != null) {
             verificationStatus = activeCallInvite.getCallerInfo().isVerified() == true
@@ -613,13 +656,23 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
     private void handleCancelCall(Intent intent) {
         CancelledCallInvite cancelledCallInvite = intent.getParcelableExtra(Constants.CANCELLED_CALL_INVITE);
 
+
         ReactApplicationContext ctx = getReactApplicationContext();
+        /*
         SoundPoolManager.getInstance(ctx).stopRinging();
         callNotificationManager.createMissedCallNotification(
                 getReactApplicationContext(),
                 cancelledCallInvite.getCallSid(),
                 cancelledCallInvite.getFrom()
         );
+         */
+
+        Connection conn = VoiceConnectionService.getConnection();
+        if (conn == null) {
+            Log.w(TAG, "[VoiceConnection] endCall ignored because no connection found, uuid: ");
+            return;
+        }
+        conn.onAbort();
 
         WritableMap params = Arguments.createMap();
 
@@ -637,6 +690,31 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
         // TODO handle custom parameters
         eventManager.sendEvent(EVENT_CALL_INVITE_CANCELLED, params);
+    }
+
+    @ReactMethod
+    public void configureConnectionService() {
+        Context appContext = getReactApplicationContext();
+        ApplicationInfo applicationInfo = appContext.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+
+        String appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : appContext.getString(stringId);
+
+        PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
+        builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
+
+        /*
+        if (_settings != null && _settings.hasKey("imageName")) {
+            int identifier = appContext.getResources().getIdentifier(_settings.getString("imageName"), "drawable", appContext.getPackageName());
+            Icon icon = Icon.createWithResource(appContext, identifier);
+            builder.setIcon(icon);
+        }
+         */
+
+        PhoneAccount account = builder.build();
+
+        telephonyManager = (TelephonyManager) appContext.getSystemService(Context.TELEPHONY_SERVICE);
+        telecomManager.registerPhoneAccount(account);
     }
 
     @ReactMethod

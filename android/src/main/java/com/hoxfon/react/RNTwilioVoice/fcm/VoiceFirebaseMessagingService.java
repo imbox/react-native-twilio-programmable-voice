@@ -2,11 +2,16 @@ package com.hoxfon.react.RNTwilioVoice.fcm;
 
 import android.app.ActivityManager;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import android.telecom.PhoneAccount;
+import android.telecom.TelecomManager;
 import android.util.Log;
 
 import com.facebook.react.ReactApplication;
@@ -126,12 +131,16 @@ public class VoiceFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void handleInvite(CallInvite callInvite, int notificationId) {
+        Log.d(TAG, "Hit skall jag ej komma.. Skall ej skicka en vanlig notis...");
+        /*
         Intent intent = new Intent(this, IncomingCallNotificationService.class);
         intent.setAction(Constants.ACTION_INCOMING_CALL);
         intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
         intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
 
         startService(intent);
+
+         */
     }
 
     private void handleCancelledCallInvite(CancelledCallInvite cancelledCallInvite, CallException callException) {

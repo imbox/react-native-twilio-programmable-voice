@@ -28,11 +28,19 @@ public class Constants {
     public static final String ACTION_OPEN_CALL_IN_PROGRESS = "CALL_IN_PROGRESS";
     public static final String ACTION_JS_ANSWER = "ACTION_JS_ANSWER";
     public static final String ACTION_JS_REJECT = "ACTION_JS_REJECT";
+    public static final String ACTION_OUTGOING_CALL = "ACTION_OUTGOING_CALL";
+    public static final String ACTION_HOLD_CALL = "ACTION_HOLD_CALL";
+    public static final String ACTION_UNHOLD_CALL = "ACTION_UNHOLD_CALL";
+    public static final String ACTION_DTMF_SEND = "ACTION_DTMF_SEND";
+    public static final String ACTION_DISCONNECT_CALL = "ACTION_DISCONNECT_CALL";
+
+    public static final String DTMF = "DTMF";
 
     public static final String CALL_SID = "call_sid";
     public static final String CALL_STATE = "call_state";
     public static final String CALL_FROM = "call_from";
     public static final String CALL_TO = "call_to";
+    public static final String CALL_CUSTOM_PARAMETERS = "custom_parameters";
     public static final String ERROR = "err";
     public static final String CALL_KEY = "call";
     public static final String CALL_INVITE_KEY = "callInvite";
@@ -42,4 +50,8 @@ public class Constants {
     public static final String CALLER_VERIFICATION_VERIFIED = "verified";
     public static final String CALLER_VERIFICATION_UNVERIFIED = "unverified";
     public static final String CALLER_VERIFICATION_UNKNOWN = "unknown";
+
+    public static final String EXTRA_CALL_UUID = "uuid";
+
+    public static final String EXTRA_DISABLE_ADD_CALL = "android.telecom.extra.DISABLE_ADD_CALL";
 }

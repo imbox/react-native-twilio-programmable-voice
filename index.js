@@ -91,6 +91,11 @@ const Twilio = {
             TwilioVoice.configureCallKit(params)
         }
     },
+    configureConnectionService(params = {}) {
+        if (Platform.OS === ANDROID) {
+            TwilioVoice.configureConnectionService(params)
+        }
+    },
     unregister() {
         TwilioVoice.unregister()
     },
@@ -113,7 +118,7 @@ const Twilio = {
         TwilioVoice.getSelectedAudioDevice()
     },
     // selectAudioDevice selects the passed audio device for the current active call
-    selectAudioDevice(name: string) {
+    selectAudioDevice(name) {
         if (Platform.OS === IOS) {
             return
         }
