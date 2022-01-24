@@ -94,6 +94,8 @@ public class VoiceFirebaseMessagingService extends FirebaseMessagingService {
                             }
 
                             // when the app is not started or in the background
+                            /*
+                            TODO: Kontrollera huruvida denna behövs eller ej..
                             if (appImportance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
                                 if (BuildConfig.DEBUG) {
                                     Log.d(TAG, "Background");
@@ -101,7 +103,9 @@ public class VoiceFirebaseMessagingService extends FirebaseMessagingService {
                                 handleInvite(callInvite, notificationId);
                                 return;
                             }
+                             */
 
+                            Log.d(TAG, "Sending intent ACTION INCOMING CALL..");
                             Intent intent = new Intent(Constants.ACTION_INCOMING_CALL);
                             intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
                             intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);

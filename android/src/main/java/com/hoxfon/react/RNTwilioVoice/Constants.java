@@ -33,6 +33,8 @@ public class Constants {
     public static final String ACTION_UNHOLD_CALL = "ACTION_UNHOLD_CALL";
     public static final String ACTION_DTMF_SEND = "ACTION_DTMF_SEND";
     public static final String ACTION_DISCONNECT_CALL = "ACTION_DISCONNECT_CALL";
+    public static final String ACTION_ANSWER_CALL = "ACTION_ANSWER_CALL";
+    public static final String ACTION_REJECT_CALL = "ACTION_REJECT_CALL";
 
     public static final String DTMF = "DTMF";
 

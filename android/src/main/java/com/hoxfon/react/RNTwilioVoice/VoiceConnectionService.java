@@ -14,6 +14,9 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.util.Log;
 
+import java.util.HashMap;
+
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -111,11 +114,15 @@ public class VoiceConnectionService extends ConnectionService {
             @Override
             public void onAnswer() {
                 super.onAnswer();
+                Log.d(TAG, "onAnswer pressed");
+                sendCallRequestToActivity2(Constants.ACTION_ANSWER_CALL, null);
             }
 
             @Override
             public void onReject() {
                 super.onReject();
+                Log.d(TAG, "onReject pressed");
+                sendCallRequestToActivity(Constants.ACTION_REJECT_CALL);
                 connection.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
                 connection.destroy();
             }
@@ -161,6 +168,24 @@ public class VoiceConnectionService extends ConnectionService {
         connection.setDialing();
         connection.setExtras(request.getExtras());
         return connection;
+    }
+
+    private void sendCallRequestToActivity2(String action, @Nullable final HashMap attributeMap) {
+        final VoiceConnectionService instance = this;
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(action);
+                if (attributeMap != null) {
+                    Bundle extras = new Bundle();
+                    extras.putSerializable("attributeMap", attributeMap);
+                    intent.putExtras(extras);
+                }
+                LocalBroadcastManager.getInstance(instance).sendBroadcast(intent);
+            }
+        });
+
     }
 
     /*

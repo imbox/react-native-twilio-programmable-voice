@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -317,8 +318,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                     caller = toNumber;
                 }
                 activeCall = call;
-                callNotificationManager.createHangupNotification(getReactApplicationContext(),
-                        call.getSid(), caller);
+                //callNotificationManager.createHangupNotification(getReactApplicationContext(),
+                //        call.getSid(), caller);
                 eventManager.sendEvent(EVENT_CONNECTION_DID_CONNECT, params);
                 activeCallInvite = null;
             }
@@ -380,7 +381,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                     activeCall = null;
                 }
                 eventManager.sendEvent(EVENT_CONNECTION_DID_DISCONNECT, params);
-                callNotificationManager.removeHangupNotification(getReactApplicationContext());
+                // callNotificationManager.removeHangupNotification(getReactApplicationContext());
                 toNumber = "";
                 toName = "";
                 activeCallInvite = null;
@@ -409,7 +410,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                     activeCall = null;
                 }
                 eventManager.sendEvent(EVENT_CONNECTION_DID_DISCONNECT, params);
-                callNotificationManager.removeHangupNotification(getReactApplicationContext());
+                // callNotificationManager.removeHangupNotification(getReactApplicationContext());
+                VoiceConnectionService.getConnection().onAbort();
                 toNumber = "";
                 toName = "";
                 activeCallInvite = null;
@@ -455,6 +457,13 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.ACTION_INCOMING_CALL);
         intentFilter.addAction(Constants.ACTION_CANCEL_CALL);
+        intentFilter.addAction(Constants.ACTION_HOLD_CALL);
+        intentFilter.addAction(Constants.ACTION_UNHOLD_CALL);
+        intentFilter.addAction(Constants.ACTION_DTMF_SEND);
+        intentFilter.addAction(Constants.ACTION_DISCONNECT_CALL);
+        intentFilter.addAction(Constants.ACTION_ANSWER_CALL);
+        intentFilter.addAction(Constants.ACTION_REJECT_CALL);
+
         LocalBroadcastManager.getInstance(getReactApplicationContext()).registerReceiver(
                 voiceBroadcastReceiver, intentFilter);
         registerActionReceiver();
@@ -481,6 +490,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "VoiceBroadCastReceiver onReceive...");
             if (intent == null || intent.getAction() == null) {
                 return;
             }
@@ -488,7 +498,9 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "VoiceBroadcastReceiver.onReceive() action: " + action + ". Intent extra: " + intent.getExtras());
             }
-            activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
+            if (intent.hasExtra(Constants.INCOMING_CALL_INVITE)) {
+                activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
+            }
 
             switch (action) {
                 // when a callInvite is received in the foreground
@@ -498,6 +510,17 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
                 case Constants.ACTION_CANCEL_CALL:
                     handleCancelCall(intent);
+                    break;
+
+                case Constants.ACTION_ANSWER_CALL:
+                    AcceptOptions acceptOptions = new AcceptOptions.Builder()
+                            .enableDscp(true)
+                            .build();
+                    activeCallInvite.accept(getReactApplicationContext(), acceptOptions, callListener);
+                    break;
+
+                case Constants.ACTION_REJECT_CALL:
+                    activeCallInvite.reject(getReactApplicationContext());
                     break;
 
                 case Constants.ACTION_DISCONNECT_CALL:
@@ -693,13 +716,14 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
     }
 
     @ReactMethod
-    public void configureConnectionService() {
+    public void configureConnectionService(ReadableMap params) {
         Context appContext = getReactApplicationContext();
         ApplicationInfo applicationInfo = appContext.getApplicationInfo();
         int stringId = applicationInfo.labelRes;
 
         String appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : appContext.getString(stringId);
 
+        handle = new PhoneAccountHandle(new ComponentName(appContext, VoiceConnectionService.class), appName);
         PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
         builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
 
@@ -714,6 +738,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         PhoneAccount account = builder.build();
 
         telephonyManager = (TelephonyManager) appContext.getSystemService(Context.TELEPHONY_SERVICE);
+
+        telecomManager = (TelecomManager) appContext.getSystemService(appContext.TELECOM_SERVICE);
         telecomManager.registerPhoneAccount(account);
     }
 
