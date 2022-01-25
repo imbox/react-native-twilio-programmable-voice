@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -27,6 +28,7 @@ import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -741,6 +743,57 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
         telecomManager = (TelecomManager) appContext.getSystemService(appContext.TELECOM_SERVICE);
         telecomManager.registerPhoneAccount(account);
+    }
+
+    @ReactMethod
+    public void openPhoneAccountSetttings() {
+        if (handle == null || handle.getComponentName() == null ||
+                TextUtils.isEmpty(handle.getComponentName().getPackageName())) {
+            Log.d(TAG, "Packagename is null");
+            return;
+        }
+        // Build the settings intent.
+        //Intent intent = new Intent(TelecomManager.ACTION_CONFIGURE_PHONE_ACCOUNT);
+        /*Intent intent = getCurrentActivity().getPackageManager().getLaunchIntentForPackage(telecomManager.getDefaultDialerPackage());
+        intent.setPackage(handle.getComponentName().getPackageName());
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.putExtra(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle);
+        // Check to see that the phone account package can handle the setting intent.
+        PackageManager pm = getCurrentActivity().getPackageManager();
+        */
+
+        /*List<ResolveInfo> resolutions = pm.queryIntentActivities(intent, 0);
+        if (resolutions.size() == 0) {
+            Log.d(TAG, "Resolutions size 0");
+            intent = null;  // set no intent if the package cannot handle it.
+            return;
+        }*/
+
+
+        // Denna tar en ttill
+        //Intent intent = new Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS);
+        /*
+        Intent intent = new Intent(TelecomManager.ACTION_CONFIGURE_PHONE_ACCOUNT);
+        intent.putExtra(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        //Intent launchIntent = getCurrentActivity().getPackageManager().getLaunchIntentForPackage(telecomManager.getDefaultDialerPackage());
+        //launchIntent.setAction(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS);
+        getCurrentActivity().startActivity(intent);
+
+         */
+
+        // https://stackoverflow.com/questions/36576964/android-register-new-phoneaccount-for-telecom
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.android.server.telecom","com.android.server.telecom.settings.EnableAccountPreferenceActivity"));
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        getCurrentActivity().startActivity(intent);
+    }
+
+    @ReactMethod
+    public void checkPhoneAccountEnabled(Promise promise) {
+        boolean enabled = telecomManager != null
+                && telecomManager.getPhoneAccount(handle) != null && telecomManager.getPhoneAccount(handle).isEnabled();
+        promise.resolve(enabled);
     }
 
     @ReactMethod

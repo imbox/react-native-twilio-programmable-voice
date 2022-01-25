@@ -96,6 +96,14 @@ const Twilio = {
             TwilioVoice.configureConnectionService(params)
         }
     },
+    openPhoneAccountSetttings() {
+        if (Platform.OS === ANDROID) {
+            TwilioVoice.openPhoneAccountSetttings()
+        }
+    },
+    async checkPhoneAccountEnabled() {
+        return Platform.OS === IOS ? true : await TwilioVoice.checkPhoneAccountEnabled()
+    },
     unregister() {
         TwilioVoice.unregister()
     },
