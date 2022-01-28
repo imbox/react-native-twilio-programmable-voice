@@ -224,7 +224,7 @@ RCT_REMAP_METHOD(getCallInvite,
 
 #pragma mark - PKPushRegistryDelegate
 - (void)pushRegistry:(PKPushRegistry *)registry didUpdatePushCredentials:(PKPushCredentials *)credentials forType:(NSString *)type {
-  NSLog(@"pushRegistry:didUpdatePushCredentials:forType");
+  NSLog(@"pushRegistry:didUpdatePushCredentials:forType eeee");
 
   if ([type isEqualToString:PKPushTypeVoIP]) {
     const unsigned *tokenBytes = [credentials.token bytes];
@@ -234,14 +234,15 @@ RCT_REMAP_METHOD(getCallInvite,
                                                         ntohl(tokenBytes[6]), ntohl(tokenBytes[7])];
     NSString *accessToken = [self fetchAccessToken];
     NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
-    if (![cachedDeviceToken isEqualToString:deviceTokenString]) {
+    //if (![cachedDeviceToken isEqualToString:deviceTokenString]) {
         cachedDeviceToken = deviceTokenString;
+        NSLog(@"device token is %@", deviceTokenString);
 
         /*
          * Perform registration if a new device token is detected.
          */
         [TwilioVoiceSDK registerWithAccessToken:accessToken
-                                 deviceToken:cachedDeviceToken
+                                 deviceToken:deviceTokenString
                                   completion:^(NSError *error) {
              if (error) {
                  NSLog(@"An error occurred while registering: %@", [error localizedDescription]);
@@ -260,7 +261,7 @@ RCT_REMAP_METHOD(getCallInvite,
                  [self sendEventWithName:@"deviceReady" body:nil];
              }
          }];
-    }
+    //}
   }
 }
 
