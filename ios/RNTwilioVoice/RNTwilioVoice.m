@@ -240,7 +240,7 @@ RCT_REMAP_METHOD(getCallInvite,
          * Perform registration if a new device token is detected.
          */
         [TwilioVoiceSDK registerWithAccessToken:accessToken
-                                 deviceToken:deviceTokenString
+                                 deviceToken:cachedDeviceToken
                                   completion:^(NSError *error) {
              if (error) {
                  NSLog(@"An error occurred while registering: %@", [error localizedDescription]);
@@ -259,7 +259,7 @@ RCT_REMAP_METHOD(getCallInvite,
                  [self sendEventWithName:@"deviceReady" body:nil];
              }
          }];
-    //}
+    }
   }
 }
 
