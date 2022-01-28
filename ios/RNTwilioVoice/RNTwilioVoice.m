@@ -66,6 +66,10 @@ RCT_EXPORT_METHOD(initWithAccessToken:(NSString *)token) {
   [self initPushRegistry];
 }
 
+RCT_EXPORT_METHOD(refreshAccessToken:(NSString *)token) {
+  _token = token;
+}
+
 RCT_EXPORT_METHOD(configureCallKit: (NSDictionary *)params) {
   if (self.callKitCallController == nil) {
       /*
@@ -145,7 +149,7 @@ RCT_EXPORT_METHOD(sendDigits: (NSString *)digits) {
 RCT_EXPORT_METHOD(unregister) {
   NSLog(@"unregister");
   NSString *accessToken = [self fetchAccessToken];
-  NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
+  NSData *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
   if ([cachedDeviceToken length] > 0) {
       [TwilioVoiceSDK unregisterWithAccessToken:accessToken
                                  deviceToken:cachedDeviceToken
@@ -153,7 +157,7 @@ RCT_EXPORT_METHOD(unregister) {
                                     if (error) {
                                         NSLog(@"An error occurred while unregistering: %@", [error localizedDescription]);
                                     } else {
-                                        [[NSUserDefaults standardUserDefaults] setValue:@"" forKey:kCachedDeviceToken];
+                                        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCachedDeviceToken];
                                         NSLog(@"Successfully unregistered for VoIP push notifications.");
                                     }
                                 }];
@@ -227,16 +231,10 @@ RCT_REMAP_METHOD(getCallInvite,
   NSLog(@"pushRegistry:didUpdatePushCredentials:forType eeee");
 
   if ([type isEqualToString:PKPushTypeVoIP]) {
-    const unsigned *tokenBytes = [credentials.token bytes];
-    NSString *deviceTokenString = [NSString stringWithFormat:@"<%08x %08x %08x %08x %08x %08x %08x %08x>",
-                                                        ntohl(tokenBytes[0]), ntohl(tokenBytes[1]), ntohl(tokenBytes[2]),
-                                                        ntohl(tokenBytes[3]), ntohl(tokenBytes[4]), ntohl(tokenBytes[5]),
-                                                        ntohl(tokenBytes[6]), ntohl(tokenBytes[7])];
     NSString *accessToken = [self fetchAccessToken];
-    NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
-    //if (![cachedDeviceToken isEqualToString:deviceTokenString]) {
-        cachedDeviceToken = deviceTokenString;
-        NSLog(@"device token is %@", deviceTokenString);
+    NSData *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
+    if (![cachedDeviceToken isEqualToData:credentials.token]) {
+        cachedDeviceToken = credentials.token;
 
         /*
          * Perform registration if a new device token is detected.
@@ -271,7 +269,7 @@ RCT_REMAP_METHOD(getCallInvite,
   if ([type isEqualToString:PKPushTypeVoIP]) {
     NSString *accessToken = [self fetchAccessToken];
 
-    NSString *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
+    NSData *cachedDeviceToken = [[NSUserDefaults standardUserDefaults] objectForKey:kCachedDeviceToken];
     if ([cachedDeviceToken length] > 0) {
         [TwilioVoiceSDK unregisterWithAccessToken:accessToken
                                                 deviceToken:cachedDeviceToken
@@ -279,7 +277,7 @@ RCT_REMAP_METHOD(getCallInvite,
                                                    if (error) {
                                                      NSLog(@"An error occurred while unregistering: %@", [error localizedDescription]);
                                                    } else {
-                                                     [[NSUserDefaults standardUserDefaults] setValue:@"" forKey:kCachedDeviceToken];
+                                                     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCachedDeviceToken];
                                                      NSLog(@"Successfully unregistered for VoIP push notifications.");
                                                    }
                                                  }];
