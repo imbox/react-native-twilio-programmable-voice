@@ -48,6 +48,12 @@ const Twilio = {
         }
         return result
     },
+    refreshAccessToken(token) {
+        if (typeof token !== 'string') {
+            return new Error('Invalid token, token must be a string')
+        }
+        TwilioVoice.refreshAccessToken(token)
+    },
     connect(params = {}) {
         TwilioVoice.connect(params)
     },

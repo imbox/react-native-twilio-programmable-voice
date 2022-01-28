@@ -819,6 +819,14 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         startAudioSwitch();
     }
 
+    @ReactMethod
+    public void refreshAccessToken(final String accessToken) {
+        TwilioVoiceModule.this.accessToken = accessToken;
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "refreshAccessToken()");
+        }
+    }
+
     /*
      * Register your FCM token with Twilio to receive incoming call invites
      *
