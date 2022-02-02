@@ -646,9 +646,12 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
+        String from = activeCallInvite
+                .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, activeCallInvite.getFrom())
+
         Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, activeCallInvite.getFrom(), null);
-        String uuid = "abc123";
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, from, null);
+        String uuid = "abc123"; // TODO: Need UUID?
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
         // extras.putString(EXTRA_CALLER_NAME, activeCallInvite.getFrom());
@@ -719,6 +722,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
     @ReactMethod
     public void configureConnectionService(ReadableMap params) {
+        // TODO: Check if already configured, in that case just ignore
         Context appContext = getReactApplicationContext();
         ApplicationInfo applicationInfo = appContext.getApplicationInfo();
         int stringId = applicationInfo.labelRes;

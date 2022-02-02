@@ -56,4 +56,6 @@ public class Constants {
     public static final String EXTRA_CALL_UUID = "uuid";
 
     public static final String EXTRA_DISABLE_ADD_CALL = "android.telecom.extra.DISABLE_ADD_CALL";
+
+    public static final String INVITE_CUSTOM_PARAMETER_FROM = "contactFullName";
 }
