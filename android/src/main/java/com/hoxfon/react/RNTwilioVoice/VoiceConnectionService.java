@@ -115,7 +115,13 @@ public class VoiceConnectionService extends ConnectionService {
             public void onAnswer() {
                 super.onAnswer();
                 Log.d(TAG, "onAnswer pressed");
-                sendCallRequestToActivity2(Constants.ACTION_ANSWER_CALL, null);
+                final Handler handler = new Handler();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendCallRequestToActivity(Constants.ACTION_ANSWER_CALL);
+                    }
+                });
             }
 
             @Override
@@ -169,25 +175,7 @@ public class VoiceConnectionService extends ConnectionService {
         connection.setExtras(request.getExtras());
         return connection;
     }
-
-    private void sendCallRequestToActivity2(String action, @Nullable final HashMap attributeMap) {
-        final VoiceConnectionService instance = this;
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(action);
-                if (attributeMap != null) {
-                    Bundle extras = new Bundle();
-                    extras.putSerializable("attributeMap", attributeMap);
-                    intent.putExtras(extras);
-                }
-                LocalBroadcastManager.getInstance(instance).sendBroadcast(intent);
-            }
-        });
-
-    }
-
+    
     /*
      * Send call request to the VoiceConnectionServiceActivity
      */
@@ -217,6 +205,8 @@ public class VoiceConnectionService extends ConnectionService {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 break;
+            case Constants.ACTION_ANSWER_CALL:
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             default:
                 break;
         }
