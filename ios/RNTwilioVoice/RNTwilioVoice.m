@@ -7,7 +7,7 @@
 @import TwilioVoice;
 
 NSString * const kCachedDeviceToken = @"CachedDeviceToken";
-NSString * const kCallerNameCustomParameter = @"CallerName";
+NSString * const kCallerNameCustomParameter = @"contactFullName";
 
 @interface RNTwilioVoice () <PKPushRegistryDelegate, TVONotificationDelegate, TVOCallDelegate, CXProviderDelegate>
 
