@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Icon;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -647,7 +648,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
 
         String from = activeCallInvite
-                .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, activeCallInvite.getFrom())
+                .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, activeCallInvite.getFrom());
 
         Bundle extras = new Bundle();
         Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, from, null);
@@ -665,11 +666,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         params.putString(Constants.CALL_SID, activeCallInvite.getCallSid());
         params.putString(Constants.CALL_FROM, activeCallInvite.getFrom());
         params.putString(Constants.CALL_TO, activeCallInvite.getTo());
-        WritableMap customParametersMap = Arguments.createMap();
-        for (Map.Entry<String, String> entry: activeCallInvite.getCustomParameters().entrySet()) {
-            customParametersMap.putString(entry.getKey(), entry.getValue());
-        }
-        params.putMap(Constants.CALL_CUSTOM_PARAMETERS, customParametersMap);
+        params.putMap(Constants.CALL_CUSTOM_PARAMETERS, transformParams(activeCallInvite.getCustomParameters()));
         String verificationStatus = Constants.CALLER_VERIFICATION_UNKNOWN;
         if (activeCallInvite.getCallerInfo().isVerified() != null) {
             verificationStatus = activeCallInvite.getCallerInfo().isVerified() == true
@@ -679,6 +676,14 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
         params.putString(Constants.CALLER_VERIFICATION_STATUS, verificationStatus);
         eventManager.sendEvent(EVENT_DEVICE_DID_RECEIVE_INCOMING, params);
+    }
+
+    private WritableMap transformParams(Map<String, String> params) {
+        WritableMap customParametersMap = Arguments.createMap();
+        for (Map.Entry<String, String> entry: params.entrySet()) {
+            customParametersMap.putString(entry.getKey(), entry.getValue());
+        }
+        return customParametersMap;
     }
 
     private void handleCancelCall(Intent intent) {
@@ -710,43 +715,43 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             params.putString(Constants.CALL_SID, cancelledCallInvite.getCallSid());
             params.putString(Constants.CALL_FROM, cancelledCallInvite.getFrom());
             params.putString(Constants.CALL_TO, cancelledCallInvite.getTo());
+            params.putMap(Constants.CALL_CUSTOM_PARAMETERS, transformParams(cancelledCallInvite.getCustomParameters()));
             String cancelledCallInviteErr = intent.getStringExtra(Constants.CANCELLED_CALL_INVITE_EXCEPTION);
             // pass this to the event even though in v5.0.2 it is always "Call Cancelled"
             if (cancelledCallInviteErr != null) {
                 params.putString(Constants.ERROR, cancelledCallInviteErr);
             }
         }
-        // TODO handle custom parameters
+
         eventManager.sendEvent(EVENT_CALL_INVITE_CANCELLED, params);
     }
 
     @ReactMethod
     public void configureConnectionService(ReadableMap params) {
-        // TODO: Check if already configured, in that case just ignore
-        Context appContext = getReactApplicationContext();
-        ApplicationInfo applicationInfo = appContext.getApplicationInfo();
-        int stringId = applicationInfo.labelRes;
+        if (telecomManager == null) {
+            Context appContext = getReactApplicationContext();
+            ApplicationInfo applicationInfo = appContext.getApplicationInfo();
+            int stringId = applicationInfo.labelRes;
 
-        String appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : appContext.getString(stringId);
+            String appName = stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : appContext.getString(stringId);
 
-        handle = new PhoneAccountHandle(new ComponentName(appContext, VoiceConnectionService.class), appName);
-        PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
-        builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
+            handle = new PhoneAccountHandle(new ComponentName(appContext, VoiceConnectionService.class), appName);
+            PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
+            builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
 
-        /*
-        if (_settings != null && _settings.hasKey("imageName")) {
-            int identifier = appContext.getResources().getIdentifier(_settings.getString("imageName"), "drawable", appContext.getPackageName());
-            Icon icon = Icon.createWithResource(appContext, identifier);
-            builder.setIcon(icon);
+            if (params != null && params.hasKey("imageName")) {
+                int identifier = appContext.getResources().getIdentifier(params.getString("imageName"), "drawable", appContext.getPackageName());
+                Icon icon = Icon.createWithResource(appContext, identifier);
+                builder.setIcon(icon);
+            }
+
+            PhoneAccount account = builder.build();
+
+            telephonyManager = (TelephonyManager) appContext.getSystemService(Context.TELEPHONY_SERVICE);
+
+            telecomManager = (TelecomManager) appContext.getSystemService(appContext.TELECOM_SERVICE);
+            telecomManager.registerPhoneAccount(account);
         }
-         */
-
-        PhoneAccount account = builder.build();
-
-        telephonyManager = (TelephonyManager) appContext.getSystemService(Context.TELEPHONY_SERVICE);
-
-        telecomManager = (TelecomManager) appContext.getSystemService(appContext.TELECOM_SERVICE);
-        telecomManager.registerPhoneAccount(account);
     }
 
     @ReactMethod
