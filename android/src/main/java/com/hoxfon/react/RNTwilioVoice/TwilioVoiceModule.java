@@ -652,11 +652,9 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
         Bundle extras = new Bundle();
         Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, from, null);
-        String uuid = "abc123"; // TODO: Need UUID?
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
         // extras.putString(EXTRA_CALLER_NAME, activeCallInvite.getFrom());
-        extras.putString(Constants.EXTRA_CALL_UUID, uuid);
 
         telecomManager.addNewIncomingCall(handle, extras);
 

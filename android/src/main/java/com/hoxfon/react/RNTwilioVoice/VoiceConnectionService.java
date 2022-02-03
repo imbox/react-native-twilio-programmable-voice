@@ -175,7 +175,7 @@ public class VoiceConnectionService extends ConnectionService {
         connection.setExtras(request.getExtras());
         return connection;
     }
-    
+
     /*
      * Send call request to the VoiceConnectionServiceActivity
      */
