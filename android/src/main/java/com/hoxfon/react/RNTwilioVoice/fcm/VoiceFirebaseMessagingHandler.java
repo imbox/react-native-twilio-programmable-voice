@@ -94,16 +94,11 @@ public class VoiceFirebaseMessagingHandler {
                     // The callee does not accept or reject the call within 30 seconds.
                     // The Voice SDK is unable to establish a connection to Twilio.
                     handleCancelledCallInvite(ctx, cancelledCallInvite, callException);
-
-                    Connection conn = VoiceConnectionService.getConnection();
-                    if (conn != null) {
-                        conn.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
-                    }
                 }
             });
 
             if (!valid) {
-                Log.e(TAG, "The message was not a valid Twilio Voice SDK payload: " + remoteMessage.getData());
+                Log.d(TAG, "The message was not a valid Twilio Voice SDK payload: " + remoteMessage.getData());
             }
         }
 
@@ -120,7 +115,6 @@ public class VoiceFirebaseMessagingHandler {
         if (callException != null) {
             intent.putExtra(Constants.CANCELLED_CALL_INVITE_EXCEPTION, callException.getMessage());
         }
-        //ctx.startService(intent);
         LocalBroadcastManager.getInstance(ctx).sendBroadcast(intent);
     }
 }
