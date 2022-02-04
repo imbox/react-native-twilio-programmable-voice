@@ -68,6 +68,10 @@ public class VoiceFirebaseMessagingHandler {
                 public void onCallInvite(final CallInvite callInvite) {
                     Log.d(TAG, "CallInvite, addNewIncomingCall");
                     TelecomManager telecomManager = (TelecomManager) ctx.getSystemService(ctx.TELECOM_SERVICE);
+                    if (TwilioVoiceModule.handle == null) {
+                        Log.e(TAG, "Phonehandle null, call configureConnectionService before receiving calls");
+                        return;
+                    }
                     Bundle extras = new Bundle();
                     String from = callInvite
                             .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, callInvite.getFrom());
