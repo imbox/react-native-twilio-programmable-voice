@@ -685,7 +685,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        // SoundPoolManager.getInstance(getReactApplicationContext()).playRinging();
+        SoundPoolManager.getInstance(getReactApplicationContext()).playRinging();
 
         WritableMap params = Arguments.createMap();
         params.putString(Constants.CALL_SID, activeCallInvite.getCallSid());
@@ -758,7 +758,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
         ReactApplicationContext ctx = getReactApplicationContext();
 
-        //SoundPoolManager.getInstance(ctx).stopRinging();
+        SoundPoolManager.getInstance(ctx).stopRinging();
         callNotificationManager.createMissedCallNotification(
                 getReactApplicationContext(),
                 cancelledCallInvite.getCallSid(),
