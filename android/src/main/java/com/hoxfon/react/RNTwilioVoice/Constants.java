@@ -4,9 +4,10 @@ import com.twilio.voice.Call;
 
 public class Constants {
     public static final String MISSED_CALLS_GROUP = "MISSED_CALLS";
-    public static final int MISSED_CALLS_NOTIFICATION_ID = 1;
-    public static final int HANGUP_NOTIFICATION_ID = 11;
-    public static final int CLEAR_MISSED_CALLS_NOTIFICATION_ID = 21;
+    public static final int INCOMING_NOTIFICATION_ID = 1;
+    public static final int MISSED_CALLS_NOTIFICATION_ID = 11;
+    public static final int HANGUP_NOTIFICATION_ID = 21;
+    public static final int CLEAR_MISSED_CALLS_NOTIFICATION_ID = 31;
     public static final String PREFERENCE_KEY = "com.hoxfon.react.RNTwilioVoice.PREFERENCE_FILE_KEY";
 
     public static final String CALL_SID_KEY = "CALL_SID";
@@ -21,7 +22,10 @@ public class Constants {
     public static final String ACTION_MISSED_CALL = "MISSED_CALL";
     public static final String ACTION_HANGUP_CALL = "HANGUP_CALL";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
+    public static final String ACTION_INCOMING_CALL_RECEIVED = "ACTION_INCOMING_CALL_RECEIVED";
+    public static final String ACTION_INCOMING_CALL_FAILED = "ACTION_INCOMING_CALL_FAILED";
     public static final String ACTION_INCOMING_CALL_NOTIFICATION = "ACTION_INCOMING_CALL_NOTIFICATION";
+    public static final String ACTION_SHOW_INCOMING_CALL_UI = "ACTION_SHOW_INCOMING_CALL_UI";
     public static final String ACTION_CANCEL_CALL = "ACTION_CANCEL_CALL";
     public static final String ACTION_FCM_TOKEN = "ACTION_FCM_TOKEN";
     public static final String ACTION_CLEAR_MISSED_CALLS_COUNT = "CLEAR_MISSED_CALLS_COUNT";

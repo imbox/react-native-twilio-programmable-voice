@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.telecom.Connection;
+import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccount;
 import android.telecom.TelecomManager;
 import android.util.Log;
@@ -25,6 +27,8 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.hoxfon.react.RNTwilioVoice.Constants;
 import com.hoxfon.react.RNTwilioVoice.IncomingCallNotificationService;
+import com.hoxfon.react.RNTwilioVoice.TwilioVoiceModule;
+import com.hoxfon.react.RNTwilioVoice.VoiceConnectionService;
 import com.twilio.voice.CallException;
 import com.hoxfon.react.RNTwilioVoice.BuildConfig;
 import com.hoxfon.react.RNTwilioVoice.CallNotificationManager;
@@ -36,6 +40,7 @@ import com.twilio.voice.Voice;
 import java.util.Map;
 import java.util.Random;
 
+import static com.hoxfon.react.RNTwilioVoice.CallNotificationManager.getMainActivityClass;
 import static com.hoxfon.react.RNTwilioVoice.TwilioVoiceModule.TAG;
 
 public class VoiceFirebaseMessagingHandler {
@@ -61,12 +66,31 @@ public class VoiceFirebaseMessagingHandler {
             boolean valid = Voice.handleMessage(ctx, data, new MessageListener() {
                 @Override
                 public void onCallInvite(final CallInvite callInvite) {
+                    Log.d(TAG, "CallInvite, addNewIncomingCall");
+                    TelecomManager telecomManager = (TelecomManager) ctx.getSystemService(ctx.TELECOM_SERVICE);
+                    Bundle extras = new Bundle();
+                    String from = callInvite
+                            .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, callInvite.getFrom());
+                    Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, from, null);
+                    extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
+                    extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
+
+                    TwilioVoiceModule.setActiveCallInvite(callInvite);
+                    Bundle applicationExtras = new Bundle();
+                    // Does not work to send parceable via Telecommanager..
+                    //applicationExtras.putParcelable(Constants.INCOMING_CALL_INVITE, callInvite);
+                    applicationExtras.putInt(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
+                    extras.putBundle(TelecomManager.EXTRA_INCOMING_CALL_EXTRAS, applicationExtras);
+
+                    telecomManager.addNewIncomingCall(TwilioVoiceModule.handle, extras);
                     // We need to run this on the main thread, as the React code assumes that is true.
                     // Namely, DevServerHelper constructs a Handler() without a Looper, which triggers:
                     // "Can't create handler inside thread that has not called Looper.prepare()"
+                    /*
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.post(new Runnable() {
                         public void run() {
+                        4 09:24:40.588
                             CallNotificationManager callNotificationManager = new CallNotificationManager();
                             // Construct and load our normal React JS code bundle
                             ReactInstanceManager mReactInstanceManager = ((ReactApplication) application).getReactNativeHost().getReactInstanceManager();
@@ -83,16 +107,14 @@ public class VoiceFirebaseMessagingHandler {
                             }
 
                             // when the app is not started or in the background
-                            /*
-                            TODO: Kontrollera huruvida denna behövs eller ej..
                             if (appImportance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
                                 if (BuildConfig.DEBUG) {
                                     Log.d(TAG, "Background");
                                 }
-                                handleInvite(callInvite, notificationId);
+                                handleInviteFromBackground(ctx, context.getApplicationContext(), callInvite, notificationId);
                                 return;
                             }
-                             */
+
 
                             Log.d(TAG, "Sending intent ACTION INCOMING CALL..");
                             Intent intent = new Intent(Constants.ACTION_INCOMING_CALL);
@@ -101,6 +123,7 @@ public class VoiceFirebaseMessagingHandler {
                             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                         }
                     });
+                    */
                 }
 
                 @Override
@@ -109,6 +132,12 @@ public class VoiceFirebaseMessagingHandler {
                     // The callee does not accept or reject the call within 30 seconds.
                     // The Voice SDK is unable to establish a connection to Twilio.
                     handleCancelledCallInvite(ctx, cancelledCallInvite, callException);
+
+                    Connection conn = VoiceConnectionService.getConnection();
+                    if (conn != null) {
+                        conn.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
+                    }
+
                 }
             });
 
@@ -123,8 +152,21 @@ public class VoiceFirebaseMessagingHandler {
         }
     }
 
-    private void handleInvite(CallInvite callInvite, int notificationId) {
-        Log.d(TAG, "Hit skall jag ej komma.. Skall ej skicka en vanlig notis...");
+    private void handleInviteFromBackground(
+            Context context,
+            Context applicationContext,
+            CallInvite callInvite,
+            int notificationId
+    ) {
+        Log.d(TAG, "App in background, starting intent");
+        Log.d(TAG, "Sending intent ACTION INCOMING CALL.. class: " + getMainActivityClass(applicationContext));
+        Intent intent = new Intent(context, getMainActivityClass(context));
+        intent.setAction(Constants.ACTION_INCOMING_CALL);
+        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
+        intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
+
+        context.startService(intent);
+
         /*
         Intent intent = new Intent(this, IncomingCallNotificationService.class);
         intent.setAction(Constants.ACTION_INCOMING_CALL);
@@ -143,6 +185,7 @@ public class VoiceFirebaseMessagingHandler {
         if (callException != null) {
             intent.putExtra(Constants.CANCELLED_CALL_INVITE_EXCEPTION, callException.getMessage());
         }
-        ctx.startService(intent);
+        //ctx.startService(intent);
+        LocalBroadcastManager.getInstance(ctx).sendBroadcast(intent);
     }
 }
