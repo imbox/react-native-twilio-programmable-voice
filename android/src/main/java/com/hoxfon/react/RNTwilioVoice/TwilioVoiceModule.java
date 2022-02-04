@@ -493,9 +493,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.ACTION_INCOMING_CALL);
-        intentFilter.addAction(Constants.ACTION_INCOMING_CALL_RECEIVED);
         intentFilter.addAction(Constants.ACTION_INCOMING_CALL_FAILED);
-        intentFilter.addAction(Constants.ACTION_SHOW_INCOMING_CALL_UI);
         intentFilter.addAction(Constants.ACTION_CANCEL_CALL);
         intentFilter.addAction(Constants.ACTION_HOLD_CALL);
         intentFilter.addAction(Constants.ACTION_UNHOLD_CALL);
@@ -548,17 +546,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                     handleCallInviteNotification(intent.getStringExtra(Constants.INCOMING_CALL_NOTIFICATION_ID));
                     break;
 
-                // when telecom manager accepts the call
-                case Constants.ACTION_INCOMING_CALL_RECEIVED:
-                    handleCallInviteReceived();
-                    break;
-
                 case Constants.ACTION_INCOMING_CALL_FAILED:
                     handleCallInviteFailed();
-                    break;
-
-                case Constants.ACTION_SHOW_INCOMING_CALL_UI:
-                    handleShowIncomingCallUI(intent.getStringExtra(Constants.INCOMING_CALL_NOTIFICATION_ID));
                     break;
 
                 case Constants.ACTION_CANCEL_CALL:
@@ -639,10 +628,10 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "handleStartActivityIntent() action: " + action);
         }
-        activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
+        //activeCallInvite = intent.getParcelableExtra(Constants.INCOMING_CALL_INVITE);
 
         switch (action) {
-            case Constants.ACTION_INCOMING_CALL_NOTIFICATION:
+            case Constants.ACTION_INCOMING_CALL:
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "ACTION_INCOMING_CALL_NOTIFICATION handleStartActivityIntent");
                 }
@@ -696,20 +685,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        String from = activeCallInvite
-                .getCustomParameters().getOrDefault(Constants.INVITE_CUSTOM_PARAMETER_FROM, activeCallInvite.getFrom());
-
-        Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, from, null);
-        extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
-        extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
-        extras.putString(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-        // extras.putString(EXTRA_CALLER_NAME, activeCallInvite.getFrom());
-
-        telecomManager.addNewIncomingCall(handle, extras);
-
         // SoundPoolManager.getInstance(getReactApplicationContext()).playRinging();
-        /*
+
         WritableMap params = Arguments.createMap();
         params.putString(Constants.CALL_SID, activeCallInvite.getCallSid());
         params.putString(Constants.CALL_FROM, activeCallInvite.getFrom());
@@ -724,7 +701,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
         params.putString(Constants.CALLER_VERIFICATION_STATUS, verificationStatus);
         eventManager.sendEvent(EVENT_DEVICE_DID_RECEIVE_INCOMING, params);
-         */
+
     }
 
     private void handleCallInviteFailed() {
@@ -737,31 +714,6 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
 
         activeCallInvite.reject(getReactApplicationContext());
-    }
-
-    private void handleCallInviteReceived() {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "handleCallInviteNotification()");
-        }
-        if (activeCallInvite == null) {
-            Log.e(TAG, "NO active call invite");
-            return;
-        }
-
-        WritableMap params = Arguments.createMap();
-        params.putString(Constants.CALL_SID, activeCallInvite.getCallSid());
-        params.putString(Constants.CALL_FROM, activeCallInvite.getFrom());
-        params.putString(Constants.CALL_TO, activeCallInvite.getTo());
-        params.putMap(Constants.CALL_CUSTOM_PARAMETERS, transformParams(activeCallInvite.getCustomParameters()));
-        String verificationStatus = Constants.CALLER_VERIFICATION_UNKNOWN;
-        if (activeCallInvite.getCallerInfo().isVerified() != null) {
-            verificationStatus = activeCallInvite.getCallerInfo().isVerified() == true
-                    ? Constants.CALLER_VERIFICATION_VERIFIED
-                    : Constants.CALLER_VERIFICATION_UNVERIFIED
-            ;
-        }
-        params.putString(Constants.CALLER_VERIFICATION_STATUS, verificationStatus);
-        eventManager.sendEvent(EVENT_DEVICE_DID_RECEIVE_INCOMING, params);
     }
 
     // TODO: Not used anymore

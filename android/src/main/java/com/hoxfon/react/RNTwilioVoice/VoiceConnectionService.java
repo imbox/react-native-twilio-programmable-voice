@@ -44,13 +44,7 @@ public class VoiceConnectionService extends ConnectionService {
         Log.d(TAG, "onCreateIncomingConnection 222");
         Connection incomingCallConnection = createConnection(request);
         incomingCallConnection.setRinging();
-        /*
-        Bundle extras = new Bundle();
-        extras.putString(Constants.INCOMING_CALL_NOTIFICATION_ID, request.getExtras().getString(Constants.INCOMING_CALL_NOTIFICATION_ID));
-        sendCallRequestToActivity(
-                Constants.ACTION_INCOMING_CALL_RECEIVED,
-                extras);
-         */
+        sendCallRequestToActivity(Constants.ACTION_INCOMING_CALL, null);
         return incomingCallConnection;
     }
 
@@ -203,17 +197,8 @@ public class VoiceConnectionService extends ConnectionService {
                 final int notificationId = this.getExtras().getInt(Constants.INCOMING_CALL_NOTIFICATION_ID);
                 final CallInvite callInvite = TwilioVoiceModule.getActiveCallInvite();
 
-                Log.d(TAG, "Extras onShowIncomingUi:" + this.getExtras());
-                Log.d(TAG, "Extras onShowIncomingUi:" + this.getExtras().getParcelable(Constants.INCOMING_CALL_INVITE));
-/*
-                final Handler handler = new Handler();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        */
-                        // TODO: app background? Show notification. App foreground? Show UI in App somehow..
-                        Log.d(TAG, "app background? Show notification. App foreground? Show UI in App somehow..");
-                        //sendCallRequestToActivity(Constants.ACTION_SHOW_INCOMING_CALL_UI, handle);
+
+                Log.d(TAG, "app background? Show notification. App foreground? Show UI in App somehow..");
 
                 // App in background
                         CallNotificationManager.createIncomingCallNotification(
@@ -222,18 +207,7 @@ public class VoiceConnectionService extends ConnectionService {
                                 notificationId,
                                 NotificationManager.IMPORTANCE_HIGH
                         );
-                        /*
-                        Intent intent = new Intent(context, IncomingCallNotificationService.class);
-                        intent.setAction(Constants.ACTION_INCOMING_CALL);
-                        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-                        intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
-
-                        startService(intent);
-                        */
                     }
-                /*});
-
-            }*/
         };
         connection.setConnectionCapabilities(Connection.CAPABILITY_MUTE | Connection.CAPABILITY_SUPPORT_HOLD);
         connection.setConnectionProperties(Connection.PROPERTY_SELF_MANAGED);
@@ -252,7 +226,6 @@ public class VoiceConnectionService extends ConnectionService {
 
         Bundle appExtras = request.getExtras().getBundle(TelecomManager.EXTRA_INCOMING_CALL_EXTRAS);
 
-        // sendCallRequestToActivity(Constants.ACTION_INCOMING_CALL_RECEIVED, null);
         Log.d(TAG, "Created connection");
         return connection;
     }
@@ -289,7 +262,7 @@ public class VoiceConnectionService extends ConnectionService {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 break;
-            case Constants.ACTION_INCOMING_CALL_RECEIVED:
+            case Constants.ACTION_INCOMING_CALL:
             case Constants.ACTION_ANSWER_CALL:
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             default:

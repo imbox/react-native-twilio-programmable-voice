@@ -297,11 +297,6 @@ public class VoiceConnection extends Connection {
         destroy();
     }
 */
-    @Override
-    public void onShowIncomingCallUi() {
-        Log.d(TAG, "[VoiceConnection] onShowIncomingCallUi");
-        sendCallRequestToActivity(Constants.ACTION_SHOW_INCOMING_CALL_UI, handle);
-    }
 
     /*
      * Send call request to the RNCallKeepModule

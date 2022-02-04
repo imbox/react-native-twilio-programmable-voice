@@ -76,54 +76,12 @@ public class VoiceFirebaseMessagingHandler {
                     extras.putBoolean(Constants.EXTRA_DISABLE_ADD_CALL, true);
 
                     TwilioVoiceModule.setActiveCallInvite(callInvite);
+
                     Bundle applicationExtras = new Bundle();
-                    // Does not work to send parceable via Telecommanager..
-                    //applicationExtras.putParcelable(Constants.INCOMING_CALL_INVITE, callInvite);
                     applicationExtras.putInt(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
                     extras.putBundle(TelecomManager.EXTRA_INCOMING_CALL_EXTRAS, applicationExtras);
 
                     telecomManager.addNewIncomingCall(TwilioVoiceModule.handle, extras);
-                    // We need to run this on the main thread, as the React code assumes that is true.
-                    // Namely, DevServerHelper constructs a Handler() without a Looper, which triggers:
-                    // "Can't create handler inside thread that has not called Looper.prepare()"
-                    /*
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(new Runnable() {
-                        public void run() {
-                        4 09:24:40.588
-                            CallNotificationManager callNotificationManager = new CallNotificationManager();
-                            // Construct and load our normal React JS code bundle
-                            ReactInstanceManager mReactInstanceManager = ((ReactApplication) application).getReactNativeHost().getReactInstanceManager();
-                            ReactContext context = mReactInstanceManager.getCurrentReactContext();
-
-                            // initialise appImportance to the highest possible importance in case context is null
-                            int appImportance = ActivityManager.RunningAppProcessInfo.IMPORTANCE_GONE;
-
-                            if (context != null) {
-                                appImportance = callNotificationManager.getApplicationImportance((ReactApplicationContext)context);
-                            }
-                            if (BuildConfig.DEBUG) {
-                                Log.d(TAG, "context: " + context + ". appImportance = " + appImportance);
-                            }
-
-                            // when the app is not started or in the background
-                            if (appImportance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
-                                if (BuildConfig.DEBUG) {
-                                    Log.d(TAG, "Background");
-                                }
-                                handleInviteFromBackground(ctx, context.getApplicationContext(), callInvite, notificationId);
-                                return;
-                            }
-
-
-                            Log.d(TAG, "Sending intent ACTION INCOMING CALL..");
-                            Intent intent = new Intent(Constants.ACTION_INCOMING_CALL);
-                            intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-                            intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
-                            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-                        }
-                    });
-                    */
                 }
 
                 @Override
@@ -137,7 +95,6 @@ public class VoiceFirebaseMessagingHandler {
                     if (conn != null) {
                         conn.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
                     }
-
                 }
             });
 
@@ -150,32 +107,6 @@ public class VoiceFirebaseMessagingHandler {
         if (remoteMessage.getNotification() != null) {
             Log.e(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
         }
-    }
-
-    private void handleInviteFromBackground(
-            Context context,
-            Context applicationContext,
-            CallInvite callInvite,
-            int notificationId
-    ) {
-        Log.d(TAG, "App in background, starting intent");
-        Log.d(TAG, "Sending intent ACTION INCOMING CALL.. class: " + getMainActivityClass(applicationContext));
-        Intent intent = new Intent(context, getMainActivityClass(context));
-        intent.setAction(Constants.ACTION_INCOMING_CALL);
-        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-        intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
-
-        context.startService(intent);
-
-        /*
-        Intent intent = new Intent(this, IncomingCallNotificationService.class);
-        intent.setAction(Constants.ACTION_INCOMING_CALL);
-        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-        intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
-
-        startService(intent);
-
-         */
     }
 
     private void handleCancelledCallInvite(Context ctx, CancelledCallInvite cancelledCallInvite, CallException callException) {
