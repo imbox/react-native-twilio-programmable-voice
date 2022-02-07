@@ -421,6 +421,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 activeCallInvite = null;
                 Connection conn = VoiceConnectionService.getConnection();
                 conn.setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+                conn.destroy();
             }
 
             @Override
@@ -495,6 +496,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         intentFilter.addAction(Constants.ACTION_INCOMING_CALL);
         intentFilter.addAction(Constants.ACTION_INCOMING_CALL_FAILED);
         intentFilter.addAction(Constants.ACTION_CANCEL_CALL);
+        intentFilter.addAction(Constants.ACTION_OUTGOING_CALL);
         intentFilter.addAction(Constants.ACTION_HOLD_CALL);
         intentFilter.addAction(Constants.ACTION_UNHOLD_CALL);
         intentFilter.addAction(Constants.ACTION_DTMF_SEND);
@@ -568,6 +570,17 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 case Constants.ACTION_DISCONNECT_CALL:
                     activeCall.disconnect();
                     break;
+
+                case Constants.ACTION_OUTGOING_CALL:
+                    HashMap<String, String> params = (HashMap<String, String>)intent.getSerializableExtra(Constants.EXTRA_OUTGOING_PARAMS);
+
+                    handleMakeOutgoingCall(params);
+                    break;
+
+                    //TODO: Implement
+                //case Constants.ACTION_OUTGOING_CALL_FAILED:
+
+                  //  break;
 
                 case Constants.ACTION_DTMF_SEND:
                     String digits = intent.getStringExtra(Constants.DTMF);
@@ -740,11 +753,6 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         );
     }
 
-    // ####
-
-
-    // ####
-
     private WritableMap transformParams(Map<String, String> params) {
         WritableMap customParametersMap = Arguments.createMap();
         for (Map.Entry<String, String> entry: params.entrySet()) {
@@ -772,6 +780,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
         conn.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
         conn.onAbort();
+        conn.destroy();
 
         WritableMap params = Arguments.createMap();
 
@@ -790,6 +799,21 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         }
 
         eventManager.sendEvent(EVENT_CALL_INVITE_CANCELLED, params);
+    }
+
+    private void handleMakeOutgoingCall(HashMap<String, String> params) {
+        if (params == null) {
+            Log.e(TAG, "Params must not be null");
+            return;
+        }
+        Log.d(TAG, "handleMakeOutgoingCall with params: " + params);
+
+        ConnectOptions connectOptions = new ConnectOptions.Builder(accessToken)
+                .enableDscp(true)
+                .params(params)
+                .build();
+
+        activeCall = Voice.connect(getReactApplicationContext(), connectOptions, callListener);
     }
 
     @ReactMethod
@@ -1026,6 +1050,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "connect(). Params: "+params);
         }
+
         WritableMap errParams = Arguments.createMap();
         if (accessToken == null) {
             errParams.putString(Constants.ERROR, "Invalid access token");
@@ -1041,11 +1066,18 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             eventManager.sendEvent(EVENT_CONNECTION_DID_DISCONNECT, errParams);
             return;
         }
+
+        if (handle == null || telecomManager == null) {
+            Log.e(TAG, "Need to call configureConnectionService before making calls");
+            return;
+        }
+
         toNumber = params.getString("To");
         if (params.hasKey("ToName")) {
             toName = params.getString("ToName");
         }
 
+        // ###
         twiMLParams.clear();
 
         ReadableMapKeySetIterator iterator = params.keySetIterator();
@@ -1072,12 +1104,25 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             }
         }
 
-        ConnectOptions connectOptions = new ConnectOptions.Builder(accessToken)
-                .enableDscp(true)
-                .params(twiMLParams)
-                .build();
 
-        activeCall = Voice.connect(getReactApplicationContext(), connectOptions, callListener);
+
+        String to = toName != "" ? toName : toNumber;
+
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, to, null);
+
+        Bundle extras = new Bundle();
+
+        Bundle callExtras = new Bundle();
+        callExtras.putSerializable(Constants.EXTRA_OUTGOING_PARAMS, twiMLParams);
+
+        extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle);
+        extras.putParcelable(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, callExtras);
+
+        try {
+            telecomManager.placeCall(uri, extras);
+        } catch(SecurityException ex) {
+            Log.d(TAG, "not able to place call, exception blabla" + ex.getMessage());
+        }
     }
 
     @ReactMethod

@@ -62,13 +62,19 @@ public class VoiceConnectionService extends ConnectionService {
 
     @Override
     public Connection onCreateOutgoingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateOutgoingConnection");
         Connection outgoingCallConnection = createConnection(request);
         outgoingCallConnection.setDialing();
+
+        Bundle appExtras = new Bundle();
+        appExtras.putSerializable(Constants.EXTRA_OUTGOING_PARAMS, request.getExtras().getSerializable(Constants.EXTRA_OUTGOING_PARAMS));
+        sendCallRequestToActivity(Constants.ACTION_OUTGOING_CALL, appExtras);
         return outgoingCallConnection;
     }
 
     @Override
     public void onCreateOutgoingConnectionFailed(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateOutgoingConnectionFailed");
         // This might happen if the user is
         // in an emergency call (and some other cases)
         // https://developer.android.com/reference/android/telecom/ConnectionService#onCreateIncomingConnectionFailed(android.telecom.PhoneAccountHandle,%20android.telecom.ConnectionRequest)
@@ -82,6 +88,8 @@ public class VoiceConnectionService extends ConnectionService {
 
             @Override
             public void onStateChanged(int state) {
+                /*
+                // TODO: Need this?
                 if (state == Connection.STATE_DIALING) {
                     final Handler handler = new Handler();
                     handler.post(new Runnable() {
@@ -91,6 +99,7 @@ public class VoiceConnectionService extends ConnectionService {
                         }
                     });
                 }
+                 */
             }
 
             @Override
@@ -264,6 +273,8 @@ public class VoiceConnectionService extends ConnectionService {
                 break;
             case Constants.ACTION_INCOMING_CALL:
             case Constants.ACTION_ANSWER_CALL:
+            case Constants.ACTION_OUTGOING_CALL:
+                intent.putExtras(intentExtras);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             default:
                 break;

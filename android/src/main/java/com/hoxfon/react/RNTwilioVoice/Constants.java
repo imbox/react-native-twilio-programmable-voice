@@ -60,4 +60,6 @@ public class Constants {
     public static final String EXTRA_DISABLE_ADD_CALL = "android.telecom.extra.DISABLE_ADD_CALL";
 
     public static final String INVITE_CUSTOM_PARAMETER_FROM = "contactFullName";
+
+    public static final String EXTRA_OUTGOING_PARAMS = "EXTRA_OUTGOING_PARAMS";
 }

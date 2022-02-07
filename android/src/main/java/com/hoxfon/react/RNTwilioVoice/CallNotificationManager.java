@@ -350,12 +350,12 @@ public class CallNotificationManager {
         callInviteChannel.setLightColor(Color.GREEN);
 
         // TODO set sound for background incoming call
-        Uri defaultRingtoneUri = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE);
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                .build();
-        callInviteChannel.setSound(defaultRingtoneUri, audioAttributes);
+        //Uri defaultRingtoneUri = RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE);
+        //AudioAttributes audioAttributes = new AudioAttributes.Builder()
+        //        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+        //        .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+        //        .build();
+        //callInviteChannel.setSound(defaultRingtoneUri, audioAttributes);
 
         callInviteChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
