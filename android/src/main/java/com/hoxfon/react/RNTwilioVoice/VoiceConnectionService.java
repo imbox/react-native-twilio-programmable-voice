@@ -16,7 +16,11 @@ import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.util.Log;
+import android.view.WindowManager;
 
+import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.bridge.ReactContext;
 import com.twilio.voice.CallInvite;
 
 import java.util.HashMap;
@@ -208,6 +212,9 @@ public class VoiceConnectionService extends ConnectionService {
 
 
                 Log.d(TAG, "app background? Show notification. App foreground? Show UI in App somehow..");
+                ReactInstanceManager mReactInstanceManager = ((ReactApplication) getApplication()).getReactNativeHost().getReactInstanceManager();
+                ReactContext context = mReactInstanceManager.getCurrentReactContext();
+                TwilioVoiceModule.addWindowFlags(context);
 
                 // App in background
                         CallNotificationManager.createIncomingCallNotification(

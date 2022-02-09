@@ -47,10 +47,13 @@ import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.AssertionException;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
 
 import com.facebook.react.bridge.ActivityEventListener;
@@ -422,6 +425,9 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 Connection conn = VoiceConnectionService.getConnection();
                 conn.setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
                 conn.destroy();
+
+                ReactApplicationContext ctx = getReactApplicationContext();
+                clearWindowFlags(ctx);
             }
 
             @Override
@@ -729,30 +735,6 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         activeCallInvite.reject(getReactApplicationContext());
     }
 
-    // TODO: Not used anymore
-    private void handleShowIncomingCallUI(String notificationId) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "handleShowIncomingCallUI");
-        }
-        // TODO: Show notification or launch app in full screen view?
-        // What to do?
-        // https://developer.android.com/reference/android/telecom/Connection#onShowIncomingCallUi()
-        /*
-        Intent intent = new Intent(getReactApplicationContext(), IncomingCallNotificationService.class);
-        intent.setAction(Constants.ACTION_INCOMING_CALL);
-        intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
-        intent.putExtra(Constants.INCOMING_CALL_INVITE, activeCallInvite);
-
-        getReactApplicationContext().startService(intent);
-        */
-        callNotificationManager.createIncomingCallNotification(
-                getReactApplicationContext(),
-                activeCallInvite,
-                1,
-                NotificationManager.IMPORTANCE_HIGH
-        );
-    }
-
     private WritableMap transformParams(Map<String, String> params) {
         WritableMap customParametersMap = Arguments.createMap();
         for (Map.Entry<String, String> entry: params.entrySet()) {
@@ -765,6 +747,8 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         CancelledCallInvite cancelledCallInvite = intent.getParcelableExtra(Constants.CANCELLED_CALL_INVITE);
 
         ReactApplicationContext ctx = getReactApplicationContext();
+
+        clearWindowFlags(ctx);
 
         SoundPoolManager.getInstance(ctx).stopRinging();
         callNotificationManager.createMissedCallNotification(
@@ -1244,6 +1228,34 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
             // TODO
         } else {
             ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, MIC_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    public static void addWindowFlags(ReactContext context) {
+        if (context != null) {
+            Activity activity = context.getCurrentActivity();
+            if (activity != null) {
+                Window window = activity.getWindow();
+                if (window != null) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                            | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                            | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            }
+        }
+    }
+
+    public static void clearWindowFlags(ReactApplicationContext context) {
+        if (context != null) {
+            Activity activity = context.getCurrentActivity();
+            if (activity != null) {
+                Window window = activity.getWindow();
+                if (window != null) {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                            | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                            | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            }
         }
     }
 
