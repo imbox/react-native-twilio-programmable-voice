@@ -122,7 +122,7 @@ const Twilio = {
         if (Platform.OS === IOS) {
             return
         }
-        TwilioVoice.getAudioDevices()
+        return TwilioVoice.getAudioDevices()
     },
     // getSelectedAudioDevice returns the selected audio device
     getSelectedAudioDevice() {
