@@ -1207,11 +1207,19 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
 
     @ReactMethod
     public void selectAudioDevice(String name) {
+        Log.d(TAG, "selectAudioDevice" + name);
         AudioDevice selected = availableAudioDevices.get(name);
         if (selected == null) {
             return;
         }
+
         audioSwitch.selectDevice(selected);
+
+        if (activeCall != null) {
+            Log.d(TAG, "Activating newly selected device");
+            audioSwitch.deactivate();
+            audioSwitch.activate();
+        }
     }
 
     private void startAudioSwitch() {
