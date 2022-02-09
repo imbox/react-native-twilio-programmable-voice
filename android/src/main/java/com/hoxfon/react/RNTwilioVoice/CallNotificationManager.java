@@ -76,14 +76,17 @@ public class CallNotificationManager {
 
     public static void createIncomingCallNotification(Context context, CallInvite callInvite, int notificationId, int channelImportance) {
         Intent intent = new Intent(context, getMainActivityClass(context));
+        //Intent intent = new Intent(context, IncomingCallActivity.class);
         intent.setAction(Constants.ACTION_INCOMING_CALL_NOTIFICATION);
         intent.putExtra(Constants.INCOMING_CALL_NOTIFICATION_ID, notificationId);
         intent.putExtra(Constants.INCOMING_CALL_INVITE, callInvite);
         intent.putExtra(Constants.CALL_SID, callInvite.getCallSid());
         intent.putExtra(Constants.CALL_FROM, callInvite.getFrom());
         intent.putExtra(Constants.CALL_TO, callInvite.getTo());
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
