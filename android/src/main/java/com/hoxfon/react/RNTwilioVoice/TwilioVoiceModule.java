@@ -356,7 +356,12 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 activeCallInvite = null;
 
                 Connection conn = VoiceConnectionService.getConnection();
-                conn.setActive();
+                if (conn != null) {
+                    conn.setActive();
+                } else {
+                    Log.w(TAG, "Connection is null when connectiong to Twilio");
+                }
+
             }
 
             /**
@@ -454,8 +459,11 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 }
                 eventManager.sendEvent(EVENT_CONNECTION_DID_DISCONNECT, params);
                 callNotificationManager.removeHangupNotification(getReactApplicationContext());
-                VoiceConnectionService.getConnection().onAbort();
-                VoiceConnectionService.getConnection().setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+                Connection conn = VoiceConnectionService.getConnection();
+                if (conn != null) {
+                    conn.onAbort();
+                    conn.setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+                }
                 toNumber = "";
                 toName = "";
                 activeCallInvite = null;
