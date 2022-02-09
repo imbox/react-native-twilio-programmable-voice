@@ -37,6 +37,7 @@ public class Constants {
     public static final String ACTION_DISCONNECT_CALL = "ACTION_DISCONNECT_CALL";
     public static final String ACTION_ANSWER_CALL = "ACTION_ANSWER_CALL";
     public static final String ACTION_REJECT_CALL = "ACTION_REJECT_CALL";
+    public static final String ACTION_AUDIO_DEVICE_DID_CHANGE = "ACTION_AUDIO_DEVICE_DID_CHANGE";
 
     public static final String DTMF = "DTMF";
 

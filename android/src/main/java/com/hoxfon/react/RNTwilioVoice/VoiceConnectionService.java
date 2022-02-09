@@ -109,6 +109,19 @@ public class VoiceConnectionService extends ConnectionService {
             @Override
             public void onCallAudioStateChanged(CallAudioState state) {
                 Log.d(TAG, "onCallAudioStateChanged called, current state is " + state);
+                CallAudioState.audioRouteToString(state.getRoute());
+                Bundle extras = new Bundle();
+                extras.putString(
+                        Constants.SELECTED_AUDIO_DEVICE,
+                        CallAudioState.audioRouteToString(state.getRoute())
+                );
+                final Handler handler = new Handler();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendCallRequestToActivity(Constants.ACTION_AUDIO_DEVICE_DID_CHANGE, extras);
+                    }
+                });
             }
 
             @Override
@@ -281,6 +294,7 @@ public class VoiceConnectionService extends ConnectionService {
             case Constants.ACTION_INCOMING_CALL:
             case Constants.ACTION_ANSWER_CALL:
             case Constants.ACTION_OUTGOING_CALL:
+            case Constants.ACTION_AUDIO_DEVICE_DID_CHANGE:
                 intent.putExtras(intentExtras);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             default:

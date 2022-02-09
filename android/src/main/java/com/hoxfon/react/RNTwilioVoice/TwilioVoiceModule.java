@@ -509,6 +509,7 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
         intentFilter.addAction(Constants.ACTION_DISCONNECT_CALL);
         intentFilter.addAction(Constants.ACTION_ANSWER_CALL);
         intentFilter.addAction(Constants.ACTION_REJECT_CALL);
+        intentFilter.addAction(Constants.ACTION_AUDIO_DEVICE_DID_CHANGE);
 
         LocalBroadcastManager.getInstance(getReactApplicationContext()).registerReceiver(
                 voiceBroadcastReceiver, intentFilter);
@@ -600,6 +601,9 @@ public class TwilioVoiceModule extends ReactContextBaseJavaModule implements Act
                 case Constants.ACTION_UNHOLD_CALL:
                     activeCall.hold(false);
                     break;
+
+                case Constants.ACTION_AUDIO_DEVICE_DID_CHANGE:
+                    selectAudioDevice(intent.getStringExtra(Constants.SELECTED_AUDIO_DEVICE));
             }
         }
     }
